@@ -137,6 +137,7 @@ function generateBingoCard() {
 // });
 
 // Track whose turn it is (can be either player1 or player2)
+
 let currentTurn = null; // Will hold either 'player1' or 'player2'
 
 // Modify the section where you start the game to initialize the turn
@@ -186,9 +187,28 @@ io.on("connection", (socket) => {
           currentTurn = "player2"; // Change turn to player 2
           player1.emit("yourTurn", false); // Disable clicking for player 1
           player2.emit("yourTurn", true); // Enable clicking for player 2
+
+          // player1.on("whenWin", (data) => {
+          //   if (data) {
+          //     player2.emit("whenWin", "Player 2 won the match");
+          //   }
+          // });
         }
       });
-
+      player2.on("status", (status) => {
+        console.log(status + " from player 1");
+        if (status) {
+          player1.emit("result", "You loss the match ");
+          player2.emit("result", "You won the match ");
+        }
+      });
+      player1.on("status", (status) => {
+        console.log(status + " from player 2");
+        if (status) {
+          player2.emit("result", "You loss the match ");
+          player1.emit("result", "You won the match ");
+        }
+      });
       // Handle clicks from player 2
       player2.on("click", (clickedNumber) => {
         if (currentTurn === "player2") {
@@ -202,6 +222,12 @@ io.on("connection", (socket) => {
           currentTurn = "player1"; // Change turn to player 1
           player2.emit("yourTurn", false); // Disable clicking for player 2
           player1.emit("yourTurn", true); // Enable clicking for player 1
+
+          // player2.on("whenWin", (data) => {
+          //   if (data) {
+          //     player1.emit("whenWin", "Player 2 won the match");
+          //   }
+          // });
         }
       });
     }
