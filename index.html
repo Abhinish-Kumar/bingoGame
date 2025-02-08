@@ -285,12 +285,27 @@
 
         if (bingoCount >= 5) {
           console.log("Bingo! You've completed the game.");
-          alert("Bingo! You've won!");
+          // alert("Bingo! You've won!");
+          // Listen for the win event from the server
+          socket.emit("status", true);
+          // socket.on("whenWin", (data) => {
+          //   // data will either be 'true' if the current player won, or a string with the opponent's win message
+          //   if (data === true) {
+          //     alert("Bingo! You've won the game!"); // Display win message for the current player
+          //   } else {
+          //     alert(data); // Display the opponent's win message
+          //   }
+          // });
+
           return true;
         }
 
         return false;
       }
+
+      socket.on("result", (data) => {
+        document.body.innerHTML = data;
+      });
     </script>
   </body>
 </html>
