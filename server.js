@@ -12,6 +12,11 @@ app.use(cors()); // This allows all origins by default
 // Create HTTP server and bind it to the Express app
 const server = http.createServer(app);
 
+require("dotenv").config(); // Load .env file
+
+const port = process.env.PORT || 3000; // Use port from environment or default to 3000
+const corsOrigin = process.env.CORS_ORIGIN || "*"; // Use the CORS origin from environment or allow all
+
 // Create Socket.IO instance and attach it to the HTTP server
 const io = socketIo(server, {
   cors: {
@@ -128,6 +133,6 @@ io.on("connection", (socket) => {
 });
 
 // Start the server on port 3000
-server.listen(3000, () => {
+server.listen(port, () => {
   console.log("Server is running on http://localhost:3000");
 });
