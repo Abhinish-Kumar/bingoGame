@@ -138,6 +138,118 @@
       .status-info p {
         margin: 0;
       }
+
+      /* Win Message */
+      #winTheMatch {
+        width: 100%;
+        height: 100vh;
+        background-color: rgb(203, 230, 150);
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        position: relative;
+        flex-direction: column;
+        animation: fadeIn 2s;
+        text-align: center;
+
+        box-sizing: border-box;
+        /* background-image: url("https://static.vecteezy.com/system/resources/thumbnails/021/768/855/small_2x/celebration-confetti-with-box-colorful-confetti-transparent-background-vector.jpg"); */
+      }
+
+      #winTheMatch h1 {
+        color: rgb(0, 79, 128);
+        font-size: 4em;
+        text-transform: uppercase;
+        margin-bottom: 20px;
+        animation: bounceIn 1s forwards;
+      }
+
+      /* Loss Message */
+      /* Loss Message */
+      #lossTheMatch {
+        width: 100%;
+        height: 100vh;
+        background-color: rgb(54, 46, 6); /* Fallback color */
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        position: relative;
+        flex-direction: column;
+        animation: fadeIn 2s;
+        text-align: center;
+
+        /* background-image: url("https://img.freepik.com/premium-photo/silhouette-businessman-walking-spooky-cityscape-generative-ai_188544-21627.jpg"); */
+      }
+
+      #lossTheMatch h1 {
+        color: rgb(255, 255, 255);
+        font-size: 3.5em;
+        text-transform: uppercase;
+        animation: fadeOut 2s forwards;
+      }
+
+      /* Confetti animation */
+      .confetti {
+        position: absolute;
+        top: -50px;
+        width: 15px;
+        height: 15px;
+        background-color: #ffeb3b;
+        animation: confettiFall 3s linear infinite;
+      }
+
+      .confetti:nth-child(odd) {
+        background-color: #00bcd4;
+      }
+
+      .confetti:nth-child(even) {
+        background-color: #ff4081;
+      }
+
+      /* Confetti Falling Animation */
+      @keyframes confettiFall {
+        0% {
+          transform: translateY(0) rotate(0);
+        }
+        100% {
+          transform: translateY(100vh) rotate(360deg);
+        }
+      }
+
+      /* Fade In Animation */
+      @keyframes fadeIn {
+        0% {
+          opacity: 0;
+        }
+        100% {
+          opacity: 1;
+        }
+      }
+
+      /* Bounce In Animation */
+      @keyframes bounceIn {
+        0% {
+          transform: translateY(-100px);
+          opacity: 0;
+        }
+        50% {
+          transform: translateY(25px);
+          opacity: 1;
+        }
+        100% {
+          transform: translateY(0);
+        }
+      }
+
+      /* Fade Out Animation for loss */
+      @keyframes fadeOut {
+        0% {
+          opacity: 1;
+        }
+        100% {
+          opacity: 0.7;
+        }
+      }
     </style>
     <!-- Include the Socket.IO client library -->
     <script src="https://cdn.socket.io/4.0.1/socket.io.min.js"></script>
@@ -177,6 +289,7 @@
         uniqueClickedBoxesArray = [...new Set(totalClickedBoxes)];
         console.log(uniqueClickedBoxesArray);
         colorBoxes();
+
         checkBingo(cardForCheckingBingo, uniqueClickedBoxesArray);
       }
 
@@ -303,8 +416,34 @@
         return false;
       }
 
+      // HTML elements based on the match result
+      let winPage = `
+      <div id="winTheMatch">
+        <h1>🎉 You win the match! 🎉</h1>
+        <div class="confetti" style="left: 10%;"></div>
+        <div class="confetti" style="left: 20%;"></div>
+        <div class="confetti" style="left: 30%;"></div>
+        <div class="confetti" style="left: 40%;"></div>
+        <div class="confetti" style="left: 50%;"></div>
+        <div class="confetti" style="left: 60%;"></div>
+        <div class="confetti" style="left: 70%;"></div>
+        <div class="confetti" style="left: 80%;"></div>
+        <div class="confetti" style="left: 90%;"></div>
+      </div>
+    `;
+
+      let lossPage = `
+      <div id="lossTheMatch">
+        <h1>🤕You lost the match. Try next time! 👎</h1>
+      </div>
+    `;
+
       socket.on("result", (data) => {
-        document.body.innerHTML = data;
+        if ("You loss the match " == data) {
+          document.body.innerHTML = lossPage;
+        } else if ("You won the match " == data) {
+          document.body.innerHTML = winPage;
+        }
       });
     </script>
   </body>
