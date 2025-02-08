@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Socket.IO Client</title>
+    <style>
+      table,
+      td {
+        border: 1px solid black;
+        cursor: pointer;
+      }
+    </style>
+    <!-- Include the Socket.IO client library -->
+    <script src="https://cdn.socket.io/4.0.1/socket.io.min.js"></script>
+  </head>
+  <body>
+    <h1>Player Match Game</h1>
+    <button id="readyButton">Ready to Play</button>
+    <p id="status">Waiting for a match...</p>
+
+    <h1>BINGO</h1>
+    <div id="bingoBoard"></div>
+
+    <script>
+      const socket = io("http://localhost:3000");
+
+      // Send a signal to the server that the player is ready to play
+      document.getElementById("readyButton").addEventListener("click", () => {
+        socket.emit("readyToPlay");
+        document.getElementById("status").innerText =
+          "Searching for an opponent...";
+      });
+
+      // Create an array to store the clicked numbers for the current player
+      let clickedNumbers = [];
+
+      // Log the clicked button (send to server)
+      function logClickedButton(number) {
+        clickedNumbers.push(number);
+        console.log("Player clicked: ", number);
+        socket.emit("click", number); // Send the clicked number to the server
+      }
+
+      // Listen for the "startGame" event once matched
+      socket.on("startGame", (data) => {
+        const table = document.createElement("table");
+
+        for (let i = 0; i < 5; i++) {
+          const row = document.createElement("tr");
+
+          for (let j = 0; j < 5; j++) {
+            const cell = document.createElement("td");
+            cell.textContent = data.card[i][j]; // Assuming `card` is the array with Bingo values
+            cell.setAttribute("onclick", "logClickedButton(this.textContent)"); // Call logClickedButton on click
+            row.appendChild(cell);
+          }
+
+          table.appendChild(row); // Appending the row to the table
+        }
+
+        document.getElementById("bingoBoard").appendChild(table); // Append the table to the bingoBoard div
+
+        document.getElementById(
+          "status"
+        ).innerText = `You are matched with player: ${data.opponent}. Game is starting!`;
+      });
+
+      // Optionally, you can listen for other events from the server, like updates on clicked numbers
+      socket.on("updateClickedNumbers", (clickedNumbers) => {
+        console.log("Updated clicked numbers from server:", clickedNumbers);
+      });
+
+      socket.on("opponentClicked", (opponentNumber) => {
+        console.log(opponentNumber + "opponent number");
+      });
+    </script>
+  </body>
+</html>
