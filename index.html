@@ -5,10 +5,138 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Socket.IO Client</title>
     <style>
-      table,
-      td {
-        border: 1px solid black;
+      body {
+        font-family: "Arial", sans-serif;
+        background-color: #f2f2f2;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        height: 100vh;
+        margin: 0;
+        flex-direction: column;
+      }
+
+      h1 {
+        color: #4caf50;
+        font-size: 3rem;
+        text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.2);
+      }
+
+      h2 {
+        font-size: 2rem;
+        margin-top: 0.5rem;
+        color: #333;
+      }
+
+      p {
+        font-size: 1.2rem;
+        margin: 10px 0;
+        color: #555;
+      }
+
+      #status {
+        font-weight: bold;
+        color: #2196f3;
+      }
+
+      #readyButton {
+        padding: 15px 30px;
+        font-size: 1.5rem;
+        background-color: #4caf50;
+        color: white;
+        border: none;
+        border-radius: 5px;
         cursor: pointer;
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        transition: background-color 0.3s, transform 0.2s;
+      }
+
+      #readyButton:hover {
+        background-color: #45a049;
+        transform: scale(1.05);
+      }
+
+      #readyButton:active {
+        transform: scale(1);
+      }
+
+      table {
+        margin-top: 20px;
+        border-collapse: collapse;
+        box-shadow: 0 0 15px rgba(0, 0, 0, 0.1);
+      }
+
+      td {
+        border: 2px solid #333;
+        width: 60px;
+        height: 60px;
+        text-align: center;
+        vertical-align: middle;
+        font-size: 1.5rem;
+        background-color: #fff;
+        color: #333;
+        cursor: pointer;
+        transition: background-color 0.2s, transform 0.2s;
+      }
+
+      td:hover {
+        background-color: #ffeb3b;
+        transform: scale(1.1);
+      }
+
+      td:active {
+        transform: scale(1);
+        background-color: #ffca28;
+      }
+
+      td:focus {
+        outline: none;
+        background-color: #f44336;
+        color: white;
+      }
+
+      #bingoBoard {
+        margin-top: 20px;
+        text-align: center;
+      }
+
+      #bingoDisplay {
+        font-size: 2rem;
+        color: #4caf50;
+        font-weight: bold;
+        margin-top: 10px;
+      }
+
+      .container {
+        text-align: center;
+      }
+
+      .game-header {
+        background-color: #2196f3;
+        color: white;
+        padding: 10px 20px;
+        border-radius: 5px 5px 0 0;
+      }
+
+      .game-footer {
+        background-color: #f2f2f2;
+        color: #555;
+        padding: 10px;
+        border-radius: 0 0 5px 5px;
+        font-size: 1rem;
+      }
+
+      .status-info {
+        margin-top: 20px;
+        padding: 10px 20px;
+        border-radius: 5px;
+        background-color: #fff;
+        box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        font-size: 1.2rem;
+      }
+
+      .status-info p {
+        margin: 0;
       }
     </style>
     <!-- Include the Socket.IO client library -->
@@ -20,10 +148,13 @@
     <p id="status">Waiting for a match...</p>
 
     <h1>BINGO</h1>
+    <h2 id="bingoDisplay"></h2>
     <div id="bingoBoard"></div>
 
     <script>
-      const socket = io("https://bingogame-udzr.onrender.com/");
+      let totalClickedBoxes = [];
+      let uniqueClickedBoxesArray;
+      const socket = io("http://localhost:3000");
 
       // Send a signal to the server that the player is ready to play
       document.getElementById("readyButton").addEventListener("click", () => {
@@ -32,18 +163,29 @@
           "Searching for an opponent...";
       });
 
-      // Create an array to store the clicked numbers for the current player
       let clickedNumbers = [];
+      let cardForCheckingBingo;
 
       // Log the clicked button (send to server)
       function logClickedButton(number) {
+        if (!isTurn) return; // Prevent clicking if it's not the player's turn
         clickedNumbers.push(number);
         console.log("Player clicked: ", number);
-        socket.emit("click", number); // Send the clicked number to the server
+
+        socket.emit("click", number);
+        totalClickedBoxes.push(number);
+        uniqueClickedBoxesArray = [...new Set(totalClickedBoxes)];
+        console.log(uniqueClickedBoxesArray);
+        colorBoxes();
+        checkBingo(cardForCheckingBingo, uniqueClickedBoxesArray);
       }
+
+      // Disable/enable click functionality based on whose turn it is
+      let isTurn = false;
 
       // Listen for the "startGame" event once matched
       socket.on("startGame", (data) => {
+        cardForCheckingBingo = data.card;
         const table = document.createElement("table");
 
         for (let i = 0; i < 5; i++) {
@@ -51,29 +193,104 @@
 
           for (let j = 0; j < 5; j++) {
             const cell = document.createElement("td");
-            cell.textContent = data.card[i][j]; // Assuming `card` is the array with Bingo values
-            cell.setAttribute("onclick", "logClickedButton(this.textContent)"); // Call logClickedButton on click
+            cell.textContent = data.card[i][j];
+            cell.setAttribute("onclick", "logClickedButton(this.textContent)");
             row.appendChild(cell);
           }
 
-          table.appendChild(row); // Appending the row to the table
+          table.appendChild(row);
         }
 
-        document.getElementById("bingoBoard").appendChild(table); // Append the table to the bingoBoard div
-
+        document.getElementById("bingoBoard").appendChild(table);
         document.getElementById(
           "status"
         ).innerText = `You are matched with player: ${data.opponent}. Game is starting!`;
       });
 
-      // Optionally, you can listen for other events from the server, like updates on clicked numbers
-      socket.on("updateClickedNumbers", (clickedNumbers) => {
-        console.log("Updated clicked numbers from server:", clickedNumbers);
+      socket.on("yourTurn", (turn) => {
+        isTurn = turn;
+        if (turn) {
+          document.getElementById("status").innerText =
+            "It's your turn! Click the table.";
+        } else {
+          document.getElementById("status").innerText =
+            "Wait for your opponent's turn...";
+        }
       });
 
       socket.on("opponentClicked", (opponentNumber) => {
-        console.log(opponentNumber + "opponent number");
+        totalClickedBoxes = [...totalClickedBoxes, ...opponentNumber];
+        uniqueClickedBoxesArray = [...new Set(totalClickedBoxes)];
+        console.log(uniqueClickedBoxesArray);
+        colorBoxes();
       });
+
+      function colorBoxes() {
+        const tableCells = document.querySelectorAll("table td");
+
+        tableCells.forEach((cell) => {
+          for (let i = 0; i < totalClickedBoxes.length; i++) {
+            if (totalClickedBoxes[i] == cell.innerText) {
+              cell.style.backgroundColor = "yellow";
+            }
+          }
+        });
+      }
+
+      function checkBingo(card, total) {
+        console.log("Checking Bingo...", card, total);
+        let bingoCount = 0;
+        const bingoWords = [null, "B", "BI", "BIN", "BING", "BINGO"];
+
+        // Check rows
+        for (let i = 0; i < 5; i++) {
+          if (card[i].every((val) => total.includes(val.toString()))) {
+            bingoCount++;
+            console.log("Bingo! A row is complete.");
+            document.getElementById("bingoDisplay").textContent =
+              bingoWords[bingoCount];
+          }
+        }
+
+        // Check columns
+        for (let i = 0; i < 5; i++) {
+          if (card.every((row) => total.includes(row[i].toString()))) {
+            bingoCount++;
+            console.log("Bingo! A column is complete.");
+            document.getElementById("bingoDisplay").textContent =
+              bingoWords[bingoCount];
+          }
+        }
+
+        // Check diagonals
+        if (card.every((row, index) => total.includes(row[index].toString()))) {
+          bingoCount++;
+          console.log(
+            "Bingo! A diagonal (top-left to bottom-right) is complete."
+          );
+          document.getElementById("bingoDisplay").textContent =
+            bingoWords[bingoCount];
+        }
+
+        if (
+          card.every((row, index) => total.includes(row[4 - index].toString()))
+        ) {
+          bingoCount++;
+          console.log(
+            "Bingo! A diagonal (top-right to bottom-left) is complete."
+          );
+          document.getElementById("bingoDisplay").textContent =
+            bingoWords[bingoCount];
+        }
+
+        if (bingoCount >= 5) {
+          console.log("Bingo! You've completed the game.");
+          alert("Bingo! You've won!");
+          return true;
+        }
+
+        return false;
+      }
     </script>
   </body>
 </html>
