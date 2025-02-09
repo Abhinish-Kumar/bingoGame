@@ -264,7 +264,7 @@
     <div id="bingoBoard"></div>
 
     <script>
-      let onHitButton = new Audio("./hitButton.mp3");
+      let onHitButton = new Audio("/hitButton.mp3");
       let totalClickedBoxes = [];
       let uniqueClickedBoxesArray;
       const socket = io("https://bingogame-udzr.onrender.com/");
@@ -300,7 +300,7 @@
 
       // Listen for the "startGame" event once matched
       socket.on("startGame", (data) => {
-        let onCOnnectedWithPlayer = new Audio("./whenStart.mp3");
+        let onCOnnectedWithPlayer = new Audio("/whenStart.mp3");
         onCOnnectedWithPlayer.play();
         cardForCheckingBingo = data.card;
         const table = document.createElement("table");
