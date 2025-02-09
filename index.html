@@ -264,6 +264,7 @@
     <div id="bingoBoard"></div>
 
     <script>
+      let onHitButton = new Audio("./hitButton.mp3");
       let totalClickedBoxes = [];
       let uniqueClickedBoxesArray;
       const socket = io("https://bingogame-udzr.onrender.com/");
@@ -280,6 +281,7 @@
 
       // Log the clicked button (send to server)
       function logClickedButton(number) {
+        onHitButton.play();
         if (!isTurn) return; // Prevent clicking if it's not the player's turn
         clickedNumbers.push(number);
         console.log("Player clicked: ", number);
@@ -298,6 +300,8 @@
 
       // Listen for the "startGame" event once matched
       socket.on("startGame", (data) => {
+        let onCOnnectedWithPlayer = new Audio("./whenStart.mp3");
+        onCOnnectedWithPlayer.play();
         cardForCheckingBingo = data.card;
         const table = document.createElement("table");
 
